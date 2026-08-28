@@ -19,7 +19,7 @@ public static class Program
     {
         var app=new Application{ShutdownMode=ShutdownMode.OnExplicitShutdown};
         var service=new TelemetryService();
-        var widgets=new List<WidgetWindow>{new StandingsWindow(),new RelativeWindow(),new WeatherWindow(),new InputsWindow(),new TrackMapWindow()};
+        var widgets=new List<WidgetWindow>{new StandingsWindow(),new RelativeWindow(),new WeatherWindow(),new InputsWindow(),new TrackMapWindow(),new RadarWindow()};
         foreach(var w in widgets)w.Show();
         new ControlWindow(service,widgets).Show();
         app.Run();
