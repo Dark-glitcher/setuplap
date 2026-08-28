@@ -6,6 +6,11 @@ on:
     paths:
       - 'overlay-v2/**'
       - '.github/workflows/build-overlay-v2.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'overlay-v2/**'
+      - '.github/workflows/build-overlay-v2.yml'
   workflow_dispatch:
 
 jobs:
