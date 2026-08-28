@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://setuplap.co.uk/sitemap.xml
