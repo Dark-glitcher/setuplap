@@ -87,7 +87,7 @@ public sealed class TelemetryService
             Updated?.Invoke(new OverlaySnapshot{
                 Connected=true,TrackName=_track,TrackConfig=_config,
                 Throttle=Get(_sdk,"Throttle",0f),Brake=Get(_sdk,"Brake",0f),Clutch=Get(_sdk,"Clutch",0f),
-                SpeedKph=speed*3.6f,Gear=Get(_sdk,"Gear",0),
+                SpeedKph=speed*3.6f,Gear=Get(_sdk,"Gear",0),CarLeftRight=Get(_sdk,"CarLeftRight",0),
                 AirTemp=Get(_sdk,"AirTemp",0f),TrackTemp=Get(_sdk,"TrackTempCrew",Get(_sdk,"TrackTemp",0f)),
                 Humidity=Get(_sdk,"RelativeHumidity",0f),WindSpeed=Get(_sdk,"WindVel",0f),
                 TrackWetness=Get(_sdk,"TrackWetness",0f),
