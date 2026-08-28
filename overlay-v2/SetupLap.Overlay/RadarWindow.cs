@@ -1,7 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using System.Windows.Shapes;
 
 namespace SetupLapOverlay;
 
@@ -14,6 +13,20 @@ public sealed class RadarWindow : WidgetWindow
     {
         Body.Children.Add(_canvas);
         _canvas.SizeChanged += (s,e) => Draw();
+
+        // Natural HUD treatment: no panel outline, no header bar, no box background.
+        if (Content is Border frame && frame.Child is Grid root)
+        {
+            frame.Background = Brushes.Transparent;
+            frame.BorderThickness = new Thickness(0);
+            frame.CornerRadius = new CornerRadius(0);
+            if (root.RowDefinitions.Count >= 2)
+            {
+                root.RowDefinitions[0].Height = new GridLength(0);
+                Grid.SetRow(Body, 0);
+                Grid.SetRowSpan(Body, 2);
+            }
+        }
     }
 
     public override void Update(OverlaySnapshot s)
@@ -31,40 +44,20 @@ public sealed class RadarWindow : WidgetWindow
 
         double cx = w / 2, cy = h / 2;
 
-        // Radar field.
-        var guide = new Rectangle
-        {
-            Width = 164, Height = 164,
-            Stroke = new SolidColorBrush(Color.FromArgb(42,255,255,255)),
-            StrokeThickness = 1,
-            RadiusX = 14, RadiusY = 14
-        };
-        Canvas.SetLeft(guide, cx - 82); Canvas.SetTop(guide, cy - 82); _canvas.Children.Add(guide);
-
-        var centreLine = new Line
-        {
-            X1 = cx, X2 = cx, Y1 = cy - 80, Y2 = cy + 80,
-            Stroke = new SolidColorBrush(Color.FromArgb(28,255,255,255)), StrokeThickness = 1
-        };
-        _canvas.Children.Add(centreLine);
-
-        // Player car.
+        // Player car: only the useful radar geometry remains visible.
         var car = new Border
         {
-            Width = 34, Height = 64,
+            Width = 30, Height = 58,
             CornerRadius = new CornerRadius(6),
-            Background = new SolidColorBrush(Color.FromArgb(220, 255, 77, 23)),
-            BorderBrush = Theme.Text, BorderThickness = new Thickness(1)
+            Background = new SolidColorBrush(Color.FromArgb(215,255,77,23)),
+            BorderBrush = new SolidColorBrush(Color.FromArgb(150,255,255,255)),
+            BorderThickness = new Thickness(1)
         };
-        Canvas.SetLeft(car, cx - 17); Canvas.SetTop(car, cy - 32); _canvas.Children.Add(car);
+        Canvas.SetLeft(car, cx - 15); Canvas.SetTop(car, cy - 29); _canvas.Children.Add(car);
 
-        if (!_snapshot.Connected)
-        {
-            AddStatus("WAITING FOR IRACING", Theme.Muted, w, h);
-            return;
-        }
+        if (!_snapshot.Connected) return;
 
-        // CarLeftRight is iRacing's native spotter state:
+        // iRacing native spotter state:
         // 0 Off, 1 Clear, 2 Left, 3 Right, 4 Both, 5 Two Left, 6 Two Right.
         bool left = _snapshot.CarLeftRight is 2 or 4 or 5;
         bool right = _snapshot.CarLeftRight is 3 or 4 or 6;
@@ -74,13 +67,11 @@ public sealed class RadarWindow : WidgetWindow
         if (left) DrawSide(true, leftCount, cx, cy);
         if (right) DrawSide(false, rightCount, cx, cy);
 
-        // iRacing does not expose exact world X/Y for every opponent in the public live feed,
-        // so front/rear boxes use high-frequency relative timing while left/right comes from
-        // iRacing's own native spotter state.
+        // Front/rear traffic comes from relative timing; left/right is always the native spotter state.
         var close = _snapshot.Relatives
             .Where(r => !r.IsPlayer && Math.Abs(r.GapSeconds) <= 1.15)
             .OrderBy(r => Math.Abs(r.GapSeconds))
-            .Take(6)
+            .Take(4)
             .ToList();
 
         int ahead = 0, behind = 0;
@@ -88,20 +79,18 @@ public sealed class RadarWindow : WidgetWindow
         {
             bool isAhead = r.GapSeconds > 0;
             int slot = isAhead ? ahead++ : behind++;
-            if (slot >= 3) continue;
+            if (slot >= 2) continue;
 
-            double y = isAhead ? cy - 78 - slot * 25 : cy + 58 + slot * 25;
-            double x = cx - 32;
+            double y = isAhead ? cy - 72 - slot * 23 : cy + 52 + slot * 23;
             var badge = new Border
             {
-                Width = 64, Height = 20,
+                Width = 54, Height = 18,
                 CornerRadius = new CornerRadius(4),
                 Background = r.ClassBrush,
-                BorderBrush = Math.Abs(r.GapSeconds) < .35 ? Theme.Red : new SolidColorBrush(Color.FromArgb(130,0,0,0)),
-                BorderThickness = new Thickness(Math.Abs(r.GapSeconds) < .35 ? 2 : 1),
+                Opacity = .92,
                 Child = new TextBlock
                 {
-                    Text = $"{(string.IsNullOrWhiteSpace(r.Number) ? "CAR" : r.Number)}  {Math.Abs(r.GapSeconds):0.00}",
+                    Text = string.IsNullOrWhiteSpace(r.Number) ? "CAR" : r.Number,
                     Foreground = Brushes.White,
                     FontSize = 8,
                     FontWeight = FontWeights.Bold,
@@ -109,37 +98,33 @@ public sealed class RadarWindow : WidgetWindow
                     VerticalAlignment = VerticalAlignment.Center
                 }
             };
-            Canvas.SetLeft(badge, x); Canvas.SetTop(badge, y); _canvas.Children.Add(badge);
+            Canvas.SetLeft(badge, cx - 27); Canvas.SetTop(badge, y); _canvas.Children.Add(badge);
         }
 
-        string status;
-        Brush statusBrush;
-        if (_snapshot.CarLeftRight is 4 or 5 or 6) { status = "THREE WIDE"; statusBrush = Theme.Red; }
-        else if (left && right) { status = "BOTH SIDES"; statusBrush = Theme.Red; }
-        else if (left) { status = "CAR LEFT"; statusBrush = Theme.Orange; }
-        else if (right) { status = "CAR RIGHT"; statusBrush = Theme.Orange; }
-        else if (close.Any(r => Math.Abs(r.GapSeconds) < .35)) { status = "CLOSE"; statusBrush = Theme.Red; }
-        else if (close.Count > 0) { status = "TRAFFIC"; statusBrush = Theme.Orange; }
-        else { status = "CLEAR"; statusBrush = Theme.Green; }
-
-        AddStatus(status, statusBrush, w, h);
+        if (_snapshot.CarLeftRight is 4 or 5 or 6)
+            AddStatus("THREE WIDE", Theme.Red, w, h);
+        else if (left)
+            AddStatus("CAR LEFT", Theme.Orange, w, h);
+        else if (right)
+            AddStatus("CAR RIGHT", Theme.Orange, w, h);
+        else if (close.Any(r => Math.Abs(r.GapSeconds) < .35))
+            AddStatus("CLOSE", Theme.Red, w, h);
     }
 
     void DrawSide(bool left, int count, double cx, double cy)
     {
-        double x = left ? cx - 72 : cx + 42;
+        double x = left ? cx - 66 : cx + 38;
         for (int i = 0; i < count; i++)
         {
             var marker = new Border
             {
-                Width = 30, Height = 58,
+                Width = 28, Height = 54,
                 CornerRadius = new CornerRadius(5),
-                Background = new SolidColorBrush(Color.FromArgb(220,255,70,70)),
-                BorderBrush = Theme.Text,
-                BorderThickness = new Thickness(1)
+                Background = Theme.Red,
+                Opacity = .92
             };
-            Canvas.SetLeft(marker, x + (left ? -i * 15 : i * 15));
-            Canvas.SetTop(marker, cy - 29 + i * 5);
+            Canvas.SetLeft(marker, x + (left ? -i * 16 : i * 16));
+            Canvas.SetTop(marker, cy - 27 + i * 4);
             _canvas.Children.Add(marker);
         }
     }
