@@ -1,0 +1,30 @@
+name: Build SetupLap Overlay
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'overlay/**'
+      - '.github/workflows/build-overlay.yml'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Restore
+        run: dotnet restore overlay/SetupLap.Overlay/SetupLap.Overlay.csproj
+      - name: Publish self-contained Windows build
+        run: dotnet publish overlay/SetupLap.Overlay/SetupLap.Overlay.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o overlay-publish
+      - name: Upload test build
+        uses: actions/upload-artifact@v4
+        with:
+          name: SetupLapOverlay-win-x64
+          path: overlay-publish/**
+          if-no-files-found: error
