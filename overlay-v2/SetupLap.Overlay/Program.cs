@@ -20,9 +20,9 @@ public static class Program
     {
         get
         {
-            var d=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"SetupLap");
+            var d=System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"SetupLap");
             Directory.CreateDirectory(d);
-            return Path.Combine(d,"overlay-v2-crash.log");
+            return System.IO.Path.Combine(d,"overlay-v2-crash.log");
         }
     }
 
@@ -48,8 +48,6 @@ public static class Program
             var service=new TelemetryService();
             var widgets=new List<WidgetWindow>{new StandingsWindow(),new RelativeWindow(),new WeatherWindow(),new InputsWindow(),new TrackMapWindow(),new RadarWindow()};
 
-            // Create every widget HWND once, then make it invisible until telemetry is live.
-            // This is more stable than repeatedly creating/showing transparent topmost windows.
             foreach(var w in widgets)
             {
                 w.Opacity=0;
