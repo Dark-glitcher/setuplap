@@ -29,3 +29,5 @@ Third-party:
 - YamlDotNet (MIT)
 
 SetupLap is not affiliated with or endorsed by iRacing.com Motorsport Simulations.
+
+Build target: Windows x64 self-contained test executable.
