@@ -41,13 +41,13 @@ public sealed class ControlWindow:Window
             _enabled[w]=true;
             var cb=new CheckBox{Content=w.Title,IsChecked=true,Foreground=Theme.Text,Margin=new Thickness(0,5,0,5)};
             cb.Checked+=(s,e)=>{_enabled[w]=true;RefreshWidgetVisibility();};
-            cb.Unchecked+=(s,e)=>{_enabled[w]=false;w.Hide();};
+            cb.Unchecked+=(s,e)=>{_enabled[w]=false;SetWidgetVisible(w,false);};
             root.Children.Add(cb);
         }
 
         _edit=new Button{Content="EDIT LAYOUT",Height=38,Margin=new Thickness(0,16,0,8),Background=Theme.Orange,Foreground=Brushes.White,BorderThickness=new Thickness(0)};
         _edit.Click+=(s,e)=>SetEdit(!_settings.EditMode);root.Children.Add(_edit);
-        root.Children.Add(new TextBlock{Text="Overlay widgets automatically hide in the iRacing UI and appear only when a live sim session is connected.",TextWrapping=TextWrapping.Wrap,Foreground=Theme.Muted,FontSize=10,Margin=new Thickness(0,8,0,14)});
+        root.Children.Add(new TextBlock{Text="Overlay widgets automatically disappear when iRacing telemetry is not live. Windows stay loaded invisibly to avoid WPF show/hide lifecycle crashes.",TextWrapping=TextWrapping.Wrap,Foreground=Theme.Muted,FontSize=10,Margin=new Thickness(0,8,0,14)});
         root.Children.Add(new TextBlock{Text="Use Borderless/Windowed iRacing. Lock the layout before driving to make widgets click-through.",TextWrapping=TextWrapping.Wrap,Foreground=Theme.Blue,FontSize=10});
 
         Content=root;
@@ -66,12 +66,10 @@ public sealed class ControlWindow:Window
 
         foreach(var w in _widgets)
         {
-            if(_sessionLive && _enabled.TryGetValue(w,out var enabled) && enabled)
-            {
-                if(!w.IsVisible)w.Show();
-                w.Update(s);
-            }
-            else if(w.IsVisible)w.Hide();
+            bool enabled=_enabled.TryGetValue(w,out var e)&&e;
+            bool visible=_sessionLive&&enabled;
+            SetWidgetVisible(w,visible);
+            if(visible)w.Update(s);
         }
     }
 
@@ -79,10 +77,17 @@ public sealed class ControlWindow:Window
     {
         foreach(var w in _widgets)
         {
-            bool shouldShow=_sessionLive && _enabled.TryGetValue(w,out var enabled) && enabled;
-            if(shouldShow && !w.IsVisible)w.Show();
-            else if(!shouldShow && w.IsVisible)w.Hide();
+            bool shouldShow=_sessionLive&&_enabled.TryGetValue(w,out var enabled)&&enabled;
+            SetWidgetVisible(w,shouldShow);
         }
+    }
+
+    static void SetWidgetVisible(WidgetWindow w,bool visible)
+    {
+        // Do not call Window.Hide()/Show() repeatedly. Keeping the HWND alive avoids
+        // intermittent transparent/topmost WPF window crashes when telemetry reconnects.
+        w.Opacity=visible?1.0:0.0;
+        w.IsHitTestVisible=visible;
     }
 
     void SetEdit(bool e)
