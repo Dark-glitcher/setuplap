@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Text.Json;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -20,7 +21,7 @@ public sealed class ControlWindow:Window
     readonly List<WidgetWindow>_widgets;readonly TextBlock _status;readonly Button _edit;AppSettings _settings;readonly TelemetryService _service;
     public ControlWindow(TelemetryService service,List<WidgetWindow>widgets)
     {
-        _service=service;_widgets=widgets;_settings=Load();Title="SetupLap Overlay V2";Width=400;Height=510;WindowStartupLocation=WindowStartupLocation.CenterScreen;
+        _service=service;_widgets=widgets;_settings=Load();Title="SetupLap Overlay V2";Width=400;Height=520;WindowStartupLocation=WindowStartupLocation.CenterScreen;
         Background=new SolidColorBrush(Color.FromRgb(10,14,20));Foreground=Theme.Text;
         var root=new StackPanel{Margin=new Thickness(22)};
         var brand=new TextBlock{Text="SETUPLAP",FontSize=30,FontWeight=FontWeights.Black};root.Children.Add(brand);
@@ -29,7 +30,7 @@ public sealed class ControlWindow:Window
         root.Children.Add(new TextBlock{Text="WIDGETS",Foreground=Theme.Orange,FontSize=10,FontWeight=FontWeights.Bold});
         foreach(var w in widgets){var cb=new CheckBox{Content=w.Title,IsChecked=true,Foreground=Theme.Text,Margin=new Thickness(0,5,0,5)};cb.Checked+=(s,e)=>w.Show();cb.Unchecked+=(s,e)=>w.Hide();root.Children.Add(cb);}
         _edit=new Button{Content="EDIT LAYOUT",Height=38,Margin=new Thickness(0,16,0,8),Background=Theme.Orange,Foreground=Brushes.White,BorderThickness=new Thickness(0)};_edit.Click+=(s,e)=>SetEdit(!_settings.EditMode);root.Children.Add(_edit);
-        root.Children.Add(new TextBlock{Text="V2: driver licence + iRating, class positions, class-coloured multiclass map markers, exact Red Bull Ring GP map, compact layout.",TextWrapping=TextWrapping.Wrap,Foreground=Theme.Muted,FontSize=10,Margin=new Thickness(0,8,0,14)});
+        root.Children.Add(new TextBlock{Text="V2: licence + iRating, class positions, multiclass map markers, Red Bull Ring GP map, compact widgets and native iRacing left/right radar warnings.",TextWrapping=TextWrapping.Wrap,Foreground=Theme.Muted,FontSize=10,Margin=new Thickness(0,8,0,14)});
         root.Children.Add(new TextBlock{Text="Use Borderless/Windowed iRacing. In race mode, lock the layout to make widgets click-through.",TextWrapping=TextWrapping.Wrap,Foreground=Theme.Blue,FontSize=10});
         Content=root;Closing+=(s,e)=>{Save();Application.Current.Shutdown();};ApplyPositions();SetEdit(_settings.EditMode);
         service.Updated+=s=>Dispatcher.BeginInvoke(()=>{_status.Text=s.Connected?$"● LIVE · {s.TrackName}":"● WAITING FOR IRACING";_status.Foreground=s.Connected?Theme.Green:Theme.Red;foreach(var w in widgets)if(w.IsVisible)w.Update(s);});
