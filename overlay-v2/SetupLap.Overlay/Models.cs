@@ -36,6 +36,7 @@ public sealed class OverlaySnapshot
     public float Clutch { get; init; }
     public float SpeedKph { get; init; }
     public int Gear { get; init; }
+    public int CarLeftRight { get; init; }
     public float AirTemp { get; init; }
     public float TrackTemp { get; init; }
     public float Humidity { get; init; }
