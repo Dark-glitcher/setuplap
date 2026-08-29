@@ -1,1 +1,2 @@
 SetupLap Overlay V2 build validation trigger.
+Radar: native iRacing CarLeftRight integration enabled.
