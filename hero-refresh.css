@@ -1,0 +1,17 @@
+.hero-polished{min-height:760px;background:radial-gradient(circle at 77% 42%,rgba(255,77,23,.15),transparent 34rem),linear-gradient(180deg,#07090d,#07090d)}
+.hero-polished:before{opacity:.9}
+.hero-inner{padding:76px 0 68px;grid-template-columns:minmax(520px,.86fr) minmax(620px,1.14fr);gap:22px;min-height:680px}
+.hero-content{position:relative;z-index:3}
+.hero h1{font-size:clamp(76px,6.6vw,112px);line-height:.82;max-width:680px;margin-top:20px}
+.hero-copy{max-width:620px;font-size:17px;line-height:1.7}
+.hero-actions{margin-top:28px}.trust-row{margin-top:25px}
+.hero-visual{height:600px;margin-right:-90px;display:flex;align-items:center;justify-content:flex-end;overflow:visible}
+.hero-visual:before,.hero-visual .speed-lines,.hero-visual .car-silhouette,.hero-visual .visual-label{display:none}
+.hero-art{display:block;width:min(760px,100%);height:auto;max-height:600px;object-fit:contain;filter:drop-shadow(0 34px 44px rgba(0,0,0,.58));border-radius:28px}
+.hero-art-wrap{position:relative;width:100%;display:flex;justify-content:flex-end;align-items:center}
+.hero-art-wrap:after{content:"RACE PACE // CONFIDENCE // CONSISTENCY";position:absolute;right:54px;bottom:26px;font-size:8px;letter-spacing:.24em;font-weight:800;color:#69717d}
+.hero-art-wrap:before{content:"";position:absolute;inset:10% 5% 9% 12%;background:radial-gradient(circle at 72% 70%,rgba(255,77,23,.18),transparent 33%);filter:blur(24px);z-index:-1}
+.launch-strip{border-top:1px solid rgba(255,77,23,.18)}
+@media(max-width:1180px){.hero-inner{grid-template-columns:1fr 1fr}.hero-visual{margin-right:-30px}.hero h1{font-size:clamp(70px,7vw,96px)}}
+@media(max-width:1050px){.hero-polished{min-height:auto}.hero-inner{grid-template-columns:1fr;padding-top:58px}.hero-visual{height:auto;margin:18px 0 -10px}.hero-art{width:100%;max-height:none}.hero-art-wrap:after{right:30px;bottom:20px}}
+@media(max-width:650px){.hero h1{font-size:64px}.hero-art-wrap:after{display:none}}
